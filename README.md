@@ -1,1 +1,0 @@
-# QALAM.uz

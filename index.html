@@ -1,0 +1,563 @@
+
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QALAM — Hikoyalar olami</title>
+
+<style>
+:root {
+  --bg:#fff0f5;
+  --card:#ffffff;
+  --text:#302433;
+  --muted:#8e7d8d;
+  --accent:#d84f91;
+  --border:#f1dce8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Arial,sans-serif;
+  background:var(--bg);color:var(--text);transition:.25s
+}
+body.dark{
+  --bg:#19151e;--card:#28212d;--text:#fff2fa;
+  --muted:#c3aebe;--border:#493344
+}
+header{
+  background:var(--card);padding:14px 5%;display:flex;
+  justify-content:space-between;align-items:center;gap:15px;
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5
+}
+.logo{font-size:27px;font-weight:900;color:var(--accent)}
+.logo span{color:#f1b84b}
+input,textarea,select{
+  width:100%;padding:12px;border:1px solid var(--border);
+  border-radius:12px;background:var(--bg);color:var(--text);
+  font:inherit;outline:none
+}
+button{font:inherit;border:0;border-radius:11px;padding:11px 15px;cursor:pointer}
+.primary{background:var(--accent);color:white;font-weight:bold}
+.secondary{background:var(--bg);color:var(--text)}
+.search{max-width:380px;flex:1}
+nav{
+  display:flex;justify-content:center;gap:8px;flex-wrap:wrap;
+  padding:12px;background:var(--card);border-bottom:1px solid var(--border)
+}
+nav button{background:transparent;color:var(--muted)}
+nav button.active{background:var(--bg);color:var(--accent)}
+main{max-width:1150px;margin:auto;padding:25px 18px}
+.page{display:none}
+.page.active{display:block}
+.hero{
+  background:linear-gradient(120deg,#d84f91,#ef9eae,#f2c35d);
+  color:white;padding:32px;border-radius:23px;margin-bottom:28px
+}
+.hero h1{font-size:clamp(27px,4vw,42px);margin-top:0}
+.hero p{line-height:1.7}
+.section-title{display:flex;justify-content:space-between;align-items:center}
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:17px
+}
+.book{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden
+}
+.cover{
+  height:210px;display:flex;align-items:center;justify-content:center;
+  font-size:65px;background:linear-gradient(140deg,#e98bb7,#f3ca6a);
+  overflow:hidden
+}
+.cover img{width:100%;height:100%;object-fit:cover}
+.book-info{padding:13px}
+.book h3{font-size:16px;margin:8px 0}
+.book p{color:var(--muted);font-size:13px}
+.tag{font-size:11px;background:var(--bg);color:var(--accent);
+  padding:5px 8px;border-radius:20px}
+.book-actions{display:flex;gap:7px;margin-top:12px}
+.book-actions button{flex:1;padding:9px 5px;font-size:12px}
+.form-box{
+  max-width:680px;margin:20px auto;background:var(--card);
+  padding:25px;border:1px solid var(--border);border-radius:20px
+}
+label{display:block;font-weight:bold;font-size:14px;margin:16px 0 7px}
+textarea{min-height:130px;resize:vertical;line-height:1.7}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+.profile-top{text-align:center}
+.avatar{
+  width:115px;height:115px;border-radius:50%;object-fit:cover;
+  border:4px solid var(--accent);background:var(--bg)
+}
+.color-options{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.color-btn{
+  width:45px;height:45px;border:3px solid var(--card);
+  outline:1px solid var(--border);border-radius:50%;padding:0
+}
+.color-btn.selected{outline:3px solid var(--accent)}
+.reader{max-width:780px;margin:auto}
+.story-text{
+  background:var(--card);padding:25px;border-radius:18px;
+  white-space:pre-wrap;line-height:1.9;font-size:18px
+}
+.modal{
+  display:none;position:fixed;inset:0;background:#0009;z-index:20;
+  align-items:center;justify-content:center;padding:16px
+}
+.modal.show{display:flex}
+.modal-box{
+  width:100%;max-width:440px;background:var(--card);
+  padding:25px;border-radius:22px
+}
+.role-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.role-card{
+  border:2px solid var(--border);background:var(--bg);
+  color:var(--text);padding:18px 5px
+}
+.role-card.selected{border-color:var(--accent);color:var(--accent)}
+.role-card b{display:block;margin:8px 0}
+.toast{
+  display:none;position:fixed;bottom:20px;left:50%;
+  transform:translateX(-50%);background:#302433;color:white;
+  padding:13px 20px;border-radius:12px;z-index:40
+}
+footer{text-align:center;padding:25px;color:var(--muted)}
+@media(max-width:650px){
+  header{flex-wrap:wrap}
+  .search{order:3;max-width:none;flex-basis:100%}
+  main{padding:18px 12px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .cover{height:165px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="logo">QALAM<span>.</span></div>
+  <input id="search" class="search" placeholder="🔎 Hikoya yoki muallif..."
+         oninput="render()">
+  <button class="primary" onclick="showAccount()" id="accountBtn">Kirish</button>
+</header>
+
+<nav>
+  <button class="active" onclick="go('home',this)">🏠 Bosh sahifa</button>
+  <button onclick="go('discover',this)">📚 Hikoyalar</button>
+  <button onclick="go('library',this)">♥ Kutubxonam</button>
+  <button onclick="go('write',this)">✍️ Yozish</button>
+  <button onclick="go('profile',this)">👤 Profilim</button>
+</nav>
+
+<main>
+<section id="home" class="page active">
+  <div class="hero">
+    <h1>Har bir qalbda bir hikoya bor. 💗</h1>
+    <p>O'z hikoyangni yoz. Boshqalarning olamiga sayohat qil.
+    Sevimli qahramonlaringni shu yerdan top!</p>
+    <button style="background:white;color:#d84f91;font-weight:bold"
+            onclick="goId('discover')">Hikoyalarni kashf et →</button>
+  </div>
+  <h2>✨ Tavsiya etilgan hikoyalar</h2>
+  <div class="grid" id="homeBooks"></div>
+</section>
+
+<section id="discover" class="page">
+  <h2>📚 Hikoyalar olami</h2>
+  <div id="genres" style="display:flex;gap:8px;flex-wrap:wrap;margin:15px 0"></div>
+  <div class="grid" id="allBooks"></div>
+</section>
+
+<section id="library" class="page">
+  <h2>♥ Mening kutubxonam</h2>
+  <p class="small">Sevimli hikoyalaring shu yerda saqlanadi.</p>
+  <div class="grid" id="savedBooks"></div>
+</section>
+
+<section id="write" class="page">
+  <div class="form-box">
+    <h2>✍️ Yangi hikoya</h2>
+    <form id="storyForm">
+      <label>Hikoya nomi *</label>
+      <input id="storyTitle" required maxlength="100" placeholder="Hikoyang nomi">
+
+      <label>Muallif taxallusi</label>
+      <input id="storyAuthor" maxlength="40" placeholder="Taxallusing">
+
+      <label>Janr</label>
+      <select id="storyGenre">
+        <option>Romantika</option><option>Fantastika</option>
+        <option>Detektiv</option><option>Qo'rqinchli</option>
+        <option>Sarguzasht</option><option>Drama</option>
+        <option>Fanfiction</option><option>She'riyat</option>
+        <option>Boshqa</option>
+      </select>
+
+      <label>📕 Hikoya muqovasi</label>
+      <input id="storyCover" type="file" accept="image/*">
+      <p class="small">Kompyuteringdan JPG, PNG yoki boshqa rasm tanla.</p>
+      <img id="coverPreview" style="display:none;width:130px;height:175px;
+           object-fit:cover;border-radius:10px;margin-top:10px">
+
+      <label>Hikoya matni *</label>
+      <textarea id="storyText" required minlength="10"
+                placeholder="Hikoyangni shu yerda yoz..."></textarea>
+
+      <button class="primary" style="margin-top:17px" type="submit">
+        📖 Hikoyani e'lon qilish
+      </button>
+      <button class="secondary" style="margin-top:17px" type="button"
+              onclick="saveDraft()">Qoralamani saqlash</button>
+    </form>
+  </div>
+</section>
+
+<section id="reader" class="page">
+  <div class="reader">
+    <button class="secondary" onclick="goId('discover')">← Orqaga</button>
+    <div id="readerDetails"></div>
+  </div>
+</section>
+
+<section id="profile" class="page">
+  <div class="form-box">
+    <div class="profile-top">
+      <img id="avatar" class="avatar"
+           src="https://placehold.co/200x200/f9d5e5/9c4771?text=QALAM"
+           alt="Profil rasmi">
+      <h2 id="profileName">Mehmon</h2>
+      <p id="profileRole" class="small">QALAM a'zosi</p>
+      <p id="profileBio" style="line-height:1.7">Bio hali yozilmagan.</p>
+    </div>
+
+    <hr style="border:0;border-top:1px solid var(--border);margin:24px 0">
+
+    <h3>⚙️ Profilni sozlash</h3>
+
+    <label>Ism yoki taxallus</label>
+    <input id="editName" maxlength="40" placeholder="Taxallusing">
+
+    <label>O'zing haqingda — Bio</label>
+    <textarea id="editBio" maxlength="300"
+      placeholder="Masalan: Kitoblarni sevaman. Fantastika va romantik hikoyalar yozaman..."
+      style="min-height:90px"></textarea>
+    <p class="small">Bio uchun 300 tagacha belgi yozishing mumkin.</p>
+
+    <label>🖼️ Profil rasmi</label>
+    <input type="file" id="avatarFile" accept="image/*">
+    <p class="small">Rasmingni tanla. U profil sahifangda ko'rinadi.</p>
+
+    <label>Saytning orqa fon rangini tanla</label>
+    <p class="small">O'zingga yoqqan rangni tanla — butun sayt foni o'zgaradi.</p>
+    <div class="color-options" id="colorOptions">
+      <button class="color-btn" title="Pushti" style="background:#fff0f5"
+              onclick="setColor('#fff0f5',this)"></button>
+      <button class="color-btn" title="Qizil" style="background:#ffe1e1"
+              onclick="setColor('#ffe1e1',this)"></button>
+      <button class="color-btn" title="Sariq" style="background:#fff5c9"
+              onclick="setColor('#fff5c9',this)"></button>
+      <button class="color-btn" title="Oq" style="background:#ffffff"
+              onclick="setColor('#ffffff',this)"></button>
+      <button class="color-btn" title="Binafsha" style="background:#eee5ff"
+              onclick="setColor('#eee5ff',this)"></button>
+      <button class="color-btn" title="Yashil" style="background:#e0f4e5"
+              onclick="setColor('#e0f4e5',this)"></button>
+      <button class="color-btn" title="Moviy" style="background:#dff2ff"
+              onclick="setColor('#dff2ff',this)"></button>
+    </div>
+
+    <label>🌙 Ko'rinish</label>
+    <button class="secondary" onclick="toggleDark()">Tungi / kunduzgi rejim</button>
+
+    <div style="margin-top:22px">
+      <button class="primary" onclick="saveProfile()">O'zgarishlarni saqlash</button>
+      <button class="secondary" onclick="logout()">Chiqish</button>
+    </div>
+  </div>
+
+  <h2>📚 Mening hikoyalarim</h2>
+  <div class="grid" id="myBooks"></div>
+</section>
+</main>
+
+<footer>QALAM. — Hikoyalar olami © 2026</footer>
+
+<div class="modal show" id="welcome">
+  <div class="modal-box">
+    <div class="logo" style="text-align:center">QALAM<span>.</span></div>
+    <h2 style="text-align:center">Xush kelibsan! 💗</h2>
+    <p style="text-align:center" class="small">Saytga kim sifatida kirmoqchisan?</p>
+
+    <div class="role-choice">
+      <button class="role-card selected" id="readerRole"
+              onclick="chooseRole('O‘quvchi')">
+        <span style="font-size:30px">📚</span>
+        <b>O'quvchi</b><span class="small">Hikoyalarni o'qish</span>
+      </button>
+      <button class="role-card" id="writerRole"
+              onclick="chooseRole('Yozuvchi')">
+        <span style="font-size:30px">✍️</span>
+        <b>Yozuvchi</b><span class="small">Hikoyalar yozish</span>
+      </button>
+    </div>
+    <label>Isming yoki taxallusing</label>
+    <input id="nickname" maxlength="40" placeholder="Masalan: TunSadosi">
+    <p class="small">Haqiqiy ismingni yozish shart emas.</p>
+    <button class="primary" style="width:100%;margin-top:12px"
+            onclick="enterSite()">Saytga kirish →</button>
+  </div>
+</div>
+
+<div class="modal" id="accountModal">
+  <div class="modal-box">
+    <h2>Profilga kirish</h2>
+    <label>Ism yoki taxallus</label>
+    <input id="loginName" maxlength="40" placeholder="Taxallusing">
+    <label>Rol</label>
+    <select id="loginRole"><option>O‘quvchi</option><option>Yozuvchi</option></select>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="primary" onclick="loginAgain()">Kirish</button>
+      <button class="secondary" onclick="closeAccount()">Bekor qilish</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const defaults=[
+ {id:1,title:"Yurakdagi sir",author:"TunSadosi",genre:"Romantika",
+  emoji:"💌",color:"linear-gradient(145deg,#ed9dbd,#8053bd)",
+  text:"U bilan ilk bor yomg'irli kunda uchrashgandim. Qo'lida eski kitob, ko'zlarida aytilmagan minglab so'zlar bor edi.\n\n— Siz ham yomg'irni yaxshi ko'rasizmi? — deb so'radi u.\n\nMen jilmaydim. Balki ba'zi uchrashuvlar tasodif emasdir..."},
+ {id:2,title:"So'nggi sayyora",author:"Koinotchi",genre:"Fantastika",
+  emoji:"🚀",color:"linear-gradient(145deg,#142b58,#9c67d7)",
+  text:"Yer bilan aloqa uzilganiga uch yuz kun bo'ldi. Kosmik kemaning oynasidan qaraganimda, uzoqda yolg'iz bir sayyoraning nuri ko'rindi. Kompyuter esa tushunarsiz xabarni takrorlay boshladi..."},
+ {id:3,title:"Qorong'u xona",author:"SirliQalam",genre:"Detektiv",
+  emoji:"🔎",color:"linear-gradient(145deg,#202333,#7c5967)",
+  text:"Eshik ichkaridan qulflangan edi. Stol ustidagi soat 03:17 da to'xtab qolgan. Xonada hech kim yo'q, ammo oynada yangi barmoq izlari bor edi."},
+ {id:4,title:"Sehrli o'rmon",author:"OyNuri",genre:"Sarguzasht",
+  emoji:"🌲",color:"linear-gradient(145deg,#164b40,#a1bd77)",
+  text:"O'rmon chetidagi qadimiy daraxt har yuz yilda bir marta gullardi. Bu safar uning shoxlarida oltin barglar paydo bo'ldi."},
+ {id:5,title:"Unutilgan maktub",author:"QalbimdagiSo'z",genre:"Drama",
+  emoji:"✉️",color:"linear-gradient(145deg,#c58d72,#67485b)",
+  text:"Qutining tubida sarg'aygan maktub yotardi. Uning ustida faqat bitta jumla bor edi: «Agar buni o'qiyotgan bo'lsang, demak, men senga aytolmagan haqiqatni bilishga tayyorsan»."}
+];
+
+const get=(key,fallback)=> {
+ try {const x=localStorage.getItem(key);return x===null?fallback:JSON.parse(x)}
+ catch{return fallback}
+};
+let books=get("qalam_books",defaults);
+let saved=get("qalam_saved",[]);
+let user=get("qalam_user",null);
+let bg=get("qalam_bg","#fff0f5");
+let dark=get("qalam_dark",false);
+let role="O‘quvchi",genre="Barchasi",coverData="";
+let nextId=Math.max(10,...books.map(b=>Number(b.id)||0))+1;
+
+function persist(){
+ localStorage.setItem("qalam_books",JSON.stringify(books));
+ localStorage.setItem("qalam_saved",JSON.stringify(saved));
+ localStorage.setItem("qalam_user",JSON.stringify(user));
+}
+function toast(t){
+ const el=document.getElementById("toast");el.textContent=t;
+ el.style.display="block";setTimeout(()=>el.style.display="none",2400);
+}
+function esc(s){
+ return String(s??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ })[c]);
+}
+function chooseRole(r){
+ role=r;
+ document.getElementById("readerRole").classList.toggle("selected",r==="O‘quvchi");
+ document.getElementById("writerRole").classList.toggle("selected",r==="Yozuvchi");
+}
+function enterSite(){
+ const name=document.getElementById("nickname").value.trim();
+ if(!name)return toast("Ism yoki taxallus yoz!");
+ user={name,role,bio:"",avatar:""};
+ persist();document.getElementById("welcome").classList.remove("show");
+ refresh();
+ if(role==="Yozuvchi")goId("write");
+}
+function showAccount(){
+ if(user){
+  document.getElementById("loginName").value=user.name;
+  document.getElementById("loginRole").value=user.role;
+ }
+ document.getElementById("accountModal").classList.add("show");
+}
+function closeAccount(){document.getElementById("accountModal").classList.remove("show")}
+function loginAgain(){
+ const name=document.getElementById("loginName").value.trim();
+ if(!name)return toast("Taxallus yoz!");
+ user={...(user||{}),name,role:document.getElementById("loginRole").value,bio:user?.bio||"",avatar:user?.avatar||""};
+ persist();closeAccount();refresh();toast("Profil ochildi!");
+}
+function logout(){
+ user=null;persist();
+ document.getElementById("welcome").classList.add("show");
+}
+function goId(id){
+ const buttons=[...document.querySelectorAll("nav button")];
+ const map={home:0,discover:1,library:2,write:3,profile:4};
+ buttons.forEach(b=>b.classList.remove("active"));
+ if(map[id]!==undefined)buttons[map[id]].classList.add("active");
+ go(id);
+}
+function go(id,btn){
+ if(!user&&id!=="home"){
+  document.getElementById("welcome").classList.add("show");return;
+ }
+ if(btn){
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+ }
+ document.querySelectorAll("main .page").forEach(p=>p.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ refresh();window.scrollTo({top:0,behavior:"smooth"});
+}
+function setColor(color,btn){
+ bg=color;document.documentElement.style.setProperty("--bg",color);
+ localStorage.setItem("qalam_bg",JSON.stringify(color));
+ document.querySelectorAll(".color-btn").forEach(b=>b.classList.remove("selected"));
+ if(btn)btn.classList.add("selected");
+}
+function toggleDark(){
+ dark=!dark;document.body.classList.toggle("dark",dark);
+ localStorage.setItem("qalam_dark",JSON.stringify(dark));
+}
+function refresh(){
+ document.getElementById("accountBtn").textContent=user?user.name:"Kirish";
+ document.getElementById("profileName").textContent=user?.name||"Mehmon";
+ document.getElementById("profileRole").textContent=user?.role||"QALAM a'zosi";
+ document.getElementById("editName").value=user?.name||"";
+ document.getElementById("editBio").value=user?.bio||"";
+ document.getElementById("profileBio").textContent=user?.bio||"Bio hali yozilmagan.";
+ document.getElementById("avatar").src=user?.avatar||"https://placehold.co/200x200/f9d5e5/9c4771?text=QALAM";
+ document.querySelectorAll(".color-btn").forEach(b=>b.classList.remove("selected"));
+ const btn=[...document.querySelectorAll(".color-btn")].find(b=>b.getAttribute("onclick")?.includes(bg));
+ if(btn)btn.classList.add("selected");
+ render();
+}
+function saveProfile(){
+ if(!user)return toast("Avval saytga kir!");
+ const name=document.getElementById("editName").value.trim();
+ if(!name)return toast("Taxallus kirit!");
+ user.name=name;
+ user.bio=document.getElementById("editBio").value.trim();
+ persist();refresh();toast("Profil saqlandi! 💗");
+}
+function imageToData(file,maxSize=700){
+ return new Promise((resolve,reject)=>{
+  if(!file||!file.type.startsWith("image/"))return reject("Rasm faylini tanlang.");
+  const reader=new FileReader();
+  reader.onerror=()=>reject("Rasmni o'qib bo'lmadi.");
+  reader.onload=()=>{
+   const img=new Image();
+   img.onerror=()=>reject("Bu rasmni ochib bo'lmadi.");
+   img.onload=()=>{
+    const scale=Math.min(1,maxSize/Math.max(img.width,img.height));
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.round(img.width*scale);
+    canvas.height=Math.round(img.height*scale);
+    canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+    resolve(canvas.toDataURL("image/jpeg",.78));
+   };
+   img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+ });
+}
+document.getElementById("avatarFile").addEventListener("change",async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+  user=user||{name:"Mehmon",role:"O‘quvchi",bio:"",avatar:""};
+  user.avatar=await imageToData(file,500);
+  persist();refresh();toast("Profil rasmi yangilandi!");
+ }catch(err){toast(String(err));}
+});
+document.getElementById("storyCover").addEventListener("change",async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+  coverData=await imageToData(file,700);
+  const preview=document.getElementById("coverPreview");
+  preview.src=coverData;preview.style.display="block";
+ }catch(err){toast(String(err));}
+});
+function coverHTML(b){
+ return b.cover
+ ?`<div class="cover"><img src="${esc(b.cover)}" alt="Hikoya muqovasi"></div>`
+ :`<div class="cover" style="background:${b.color||'linear-gradient(145deg,#e98bb7,#f3ca6a)'}">${esc(b.emoji||"📖")}</div>`;
+}
+function bookHTML(b){
+ return `<article class="book">${coverHTML(b)}
+ <div class="book-info"><span class="tag">${esc(b.genre)}</span>
+ <h3>${esc(b.title)}</h3><p>✍️ ${esc(b.author)}</p>
+ <div class="book-actions">
+ <button class="primary" onclick="readBook(${Number(b.id)})">O'qish</button>
+ <button class="secondary" onclick="toggleSave(${Number(b.id)})">${saved.includes(b.id)?"♥":"♡"}</button>
+ </div></div></article>`;
+}
+function render(){
+ const q=document.getElementById("search").value.toLowerCase().trim();
+ const filtered=books.filter(b=>(b.title+" "+b.author+" "+b.genre).toLowerCase().includes(q)&&(genre==="Barchasi"||b.genre===genre));
+ document.getElementById("homeBooks").innerHTML=books.slice().reverse().slice(0,6).map(bookHTML).join("");
+ document.getElementById("allBooks").innerHTML=filtered.map(bookHTML).join("")||'<p class="small">Hikoya topilmadi.</p>';
+ document.getElementById("savedBooks").innerHTML=books.filter(b=>saved.includes(b.id)).map(bookHTML).join("")||'<p class="small">Kutubxonang hozircha bo‘sh.</p>';
+ document.getElementById("myBooks").innerHTML=books.filter(b=>b.owner===user?.name).map(bookHTML).join("")||'<p class="small">Hali hikoya e’lon qilmagansan.</p>';
+ const genres=["Barchasi",...new Set(books.map(b=>b.genre))];
+ document.getElementById("genres").innerHTML=genres.map(g=>`<button class="${genre===g?'primary':'secondary'}" onclick="setGenre('${esc(g)}')">${esc(g)}</button>`).join("");
+}
+function setGenre(g){genre=g;render()}
+function toggleSave(id){
+ if(!user)return document.getElementById("welcome").classList.add("show");
+ saved=saved.includes(id)?saved.filter(x=>x!==id):[...saved,id];
+ persist();render();toast("Kutubxona yangilandi!");
+}
+function readBook(id){
+ const b=books.find(x=>x.id===id);if(!b)return;
+ document.querySelectorAll("main .page").forEach(p=>p.classList.remove("active"));
+ document.getElementById("reader").classList.add("active");
+ document.getElementById("readerDetails").innerHTML=`
+ ${coverHTML(b)}<span class="tag">${esc(b.genre)}</span>
+ <h1>${esc(b.title)}</h1><p class="small">Muallif: ${esc(b.author)}</p>
+ <button class="secondary" onclick="toggleSave(${Number(b.id)})">${saved.includes(b.id)?"♥ Saqlangan":"♡ Saqlash"}</button>
+ <article class="story-text">${esc(b.text)}</article>`;
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.getElementById("storyForm").addEventListener("submit",function(e){
+ e.preventDefault();if(!user)return document.getElementById("welcome").classList.add("show");
+ const title=document.getElementById("storyTitle").value.trim();
+ const text=document.getElementById("storyText").value.trim();
+ if(!title||text.length<10)return toast("Hikoya nomi va matnini to'ldir!");
+ books.push({
+  id:nextId++,title,text,
+  author:document.getElementById("storyAuthor").value.trim()||user.name,
+  owner:user.name,genre:document.getElementById("storyGenre").value,
+  cover:coverData,emoji:"📖"
+ });
+ persist();this.reset();coverData="";
+ document.getElementById("coverPreview").style.display="none";
+ refresh();goId("discover");toast("Hikoyang e'lon qilindi! 📚");
+});
+function saveDraft(){
+ const d={title:storyTitle.value,author:storyAuthor.value,
+ genre:storyGenre.value,text:storyText.value,cover:coverData};
+ localStorage.setItem("qalam_draft",JSON.stringify(d));toast("Qoralama saqlandi!");
+}
+function loadDraft(){
+ const d=get("qalam_draft",null);if(!d)return toast("Qoralama topilmadi!");
+ storyTitle.value=d.title||"";storyAuthor.value=d.author||"";
+ storyGenre.value=d.genre||"Romantika";storyText.value=d.text||"";
+ coverData=d.cover||"";
+ if(coverData){coverPreview.src=coverData;coverPreview.style.display="block"}
+}
+document.documentElement.style.setProperty("--bg",bg);
+document.body.classList.toggle("dark",dark);
+if(user)document.getElementById("welcome").classList.remove("show");
+refresh();
+</script>
+</body>
+</html>
+
